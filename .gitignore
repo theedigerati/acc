@@ -1,0 +1,52 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.DS_Store/
+
+
+# Distribution / packaging
+dist/
+media/
+mediafiles/
+stacticfiles/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+
+# Django
+*.log
+db.sqlite3
+
+# Swagger documentation
+schema.yml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# Tooling
+.ruff_cache/
+
