@@ -45,6 +45,7 @@ SHARED_APPS = [
     "tenant_users.tenants",
     # internal apps
     "apps.user",
+    "apps.organisation",
 ]
 
 TENANT_APPS = [
