@@ -31,6 +31,31 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv(), default=".localhost")
 
 # Application definition
 
+SHARED_APPS = [
+    "django_tenants",  # 3rd party
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    # 3rd party apps
+    "rest_framework",
+    "tenant_users.permissions",
+    "tenant_users.tenants",
+]
+
+TENANT_APPS = [
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "tenant_users.permissions",
+]
+
+INSTALLED_APPS = list(SHARED_APPS) + [
+    app for app in TENANT_APPS if app not in SHARED_APPS
+]
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,6 +66,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_tenants.middleware.TenantSubfolderMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -51,6 +77,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "core.urls"
+PUBLIC_SCHEMA_URLCONF = "core.urls_public"
 
 TEMPLATES = [
     {
@@ -76,8 +103,12 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": config("DB_NAME", default="test_db"),
+        "USER": config("DB_USER", default="postgres"),
+        "PASSWORD": config("DB_PASSWORD", default="postgres"),
+        "HOST": config("DB_HOST", default="localhost"),
+        "PORT": "5432",
+        "OPTIONS": {"sslmode": config("SSL_MODE", default="disable")},
     }
 }
 
@@ -116,9 +147,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Multinants settings
+DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
+TENANT_USERS_DOMAIN = config("APP_DOMAIN_NAME", default="localhost")
+TENANT_SUBFOLDER_PREFIX = "org"
+TENANT_MODEL = "organisation.Tenant"
+TENANT_DOMAIN_MODEL = "organisation.Domain"
+BASE_TENANT_SLUG = config("BASE_TENANT_SLUG", default="acme")
+BASE_TENANT_OWNER_EMAIL = config("BASE_TENANT_OWNER_EMAIL", default="meta@localhost")
