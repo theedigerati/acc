@@ -43,6 +43,8 @@ SHARED_APPS = [
     "rest_framework",
     "tenant_users.permissions",
     "tenant_users.tenants",
+    # internal apps
+    "apps.user",
 ]
 
 TENANT_APPS = [
