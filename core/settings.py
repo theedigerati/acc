@@ -147,6 +147,16 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+ADMIN_USER_RESTRICTIONS = [
+    "delete_organisation",
+]
+
+MANAGER_USER_RESTRICTIONS = [
+    *ADMIN_USER_RESTRICTIONS,
+    "add_organisation",
+    "view_all_organisations",
+]
+
 # Multinants settings
 DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 TENANT_USERS_DOMAIN = config("APP_DOMAIN_NAME", default="localhost")

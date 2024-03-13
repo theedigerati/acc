@@ -10,6 +10,8 @@ from rest_framework.decorators import (
     permission_classes,
 )
 from rest_framework.response import Response
+from rest_framework.routers import SimpleRouter
+from apps.organisation.views import OrganisationViewSet
 
 
 @api_view()
@@ -26,3 +28,6 @@ urlpatterns = [
     path("auth/login/", TokenObtainPairView.as_view(), name="jwt-login"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="jwt-refresh"),
 ]
+
+router = SimpleRouter()
+router.register(r"organisations", OrganisationViewSet)
