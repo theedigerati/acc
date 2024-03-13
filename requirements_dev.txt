@@ -8,18 +8,44 @@ black==24.2.0
     # via -r requirements_dev.in
 click==8.1.7
     # via black
+coverage==7.4.3
+    # via -r requirements_dev.in
+exceptiongroup==1.2.0
+    # via pytest
+faker==12.0.1
+    # via mixer
+iniconfig==2.0.0
+    # via pytest
+mixer==7.2.2
+    # via -r requirements_dev.in
 mypy-extensions==1.0.0
     # via black
 packaging==24.0
-    # via black
+    # via
+    #   black
+    #   pytest
 pathspec==0.12.1
     # via black
 platformdirs==4.2.0
     # via black
+pluggy==1.4.0
+    # via pytest
+pytest==8.1.1
+    # via
+    #   -r requirements_dev.in
+    #   pytest-django
+pytest-django==4.8.0
+    # via -r requirements_dev.in
+python-dateutil==2.9.0.post0
+    # via faker
 ruff==0.3.2
     # via -r requirements_dev.in
+six==1.16.0
+    # via python-dateutil
 tomli==2.0.1
-    # via black
+    # via
+    #   black
+    #   pytest
 typing-extensions==4.10.0
     # via
     #   -c requirements.txt

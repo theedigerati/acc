@@ -1,3 +1,7 @@
 -c requirements.txt
 black
 ruff
+pytest
+pytest-django
+mixer
+coverage
