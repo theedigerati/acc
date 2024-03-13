@@ -1,3 +1,1 @@
-pytest_plugins = [
-    "tests.fixtures.setup",
-]
+pytest_plugins = ["tests.fixtures.setup", "tests.fixtures.data.organisation"]

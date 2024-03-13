@@ -48,15 +48,6 @@ INSTALLED_APPS = list(SHARED_APPS) + [
     app for app in TENANT_APPS if app not in SHARED_APPS
 ]
 
-INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-]
-
 MIDDLEWARE = [
     "django_tenants.middleware.TenantSubfolderMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -95,6 +86,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 DATABASES = {
     "default": {
+        "ENGINE": "django_tenants.postgresql_backend",
         "NAME": config("DB_NAME", default="test_db"),
         "USER": config("DB_USER", default="postgres"),
         "PASSWORD": config("DB_PASSWORD", default="postgres"),
@@ -147,6 +139,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+AUTH_USER_MODEL = "user.User"
+
 ADMIN_USER_RESTRICTIONS = [
     "delete_organisation",
 ]
@@ -165,6 +159,8 @@ TENANT_MODEL = "organisation.Tenant"
 TENANT_DOMAIN_MODEL = "organisation.Domain"
 BASE_TENANT_SLUG = config("BASE_TENANT_SLUG", default="acme")
 BASE_TENANT_OWNER_EMAIL = config("BASE_TENANT_OWNER_EMAIL", default="meta@localhost")
+
+AUTHENTICATION_BACKENDS = ("tenant_users.permissions.backend.UserBackend",)
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (

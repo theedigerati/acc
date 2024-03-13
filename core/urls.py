@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -11,6 +12,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 from rest_framework.routers import SimpleRouter
+
 from apps.organisation.views import OrganisationViewSet
 
 
@@ -31,3 +33,8 @@ urlpatterns = [
 
 router = SimpleRouter()
 router.register(r"organisations", OrganisationViewSet)
+
+urlpatterns += router.urls
+urlpatterns += staticfiles_urlpatterns()
+
+handler500 = "rest_framework.exceptions.server_error"

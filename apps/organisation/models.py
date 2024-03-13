@@ -48,6 +48,7 @@ class Organisation(models.Model):
                 self.tenant
             except ObjectDoesNotExist:
                 self._create_tenant()
+            finally:
                 self._add_all_meta_users()
         else:
             self._update_tenant()
@@ -89,8 +90,13 @@ class Organisation(models.Model):
                 pass
         return res
 
+    def get_tenant_slug(self):
+        org_name = self.name.replace(" ", "-")
+        org_branch = self.branch.lower()
+        return f"{org_name}-{org_branch}"
+
     def _create_tenant(self):
-        tenant_slug = self._generate_tenant_slug()
+        tenant_slug = self.get_tenant_slug()
         # TODO: run this on a celery task
         provision_tenant(
             tenant_name=self.name,
@@ -100,17 +106,14 @@ class Organisation(models.Model):
         self.tenant = Tenant.objects.get(slug=tenant_slug)
 
     def _update_tenant(self):
-        tenant_slug = self._generate_tenant_slug()
-        self.tenant.update(name=self.name, slug=tenant_slug)
+        tenant_slug = self.get_tenant_slug()
+        Tenant.objects.filter(id=self.tenant.id).update(
+            name=self.name, slug=tenant_slug
+        )
 
     def _add_all_meta_users(self):
         meta_users = User.objects.filter(role=User.META)
         self.add_users(list(meta_users))
-
-    def _generate_tenant_slug(self):
-        org_name = self.name.replace(" ", "-")
-        org_branch = self.branch.lower()
-        return f"{org_name}-{org_branch}"
 
 
 class Domain(DomainMixin):
