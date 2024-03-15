@@ -17,6 +17,8 @@ from apps.organisation.views import OrganisationViewSet
 from apps.user.views import UserViewSet
 from apps.department.views import DepartmentViewSet
 from apps.user.views import PermissionViewSet
+from apps.inventory.item.views import ItemViewSet
+from apps.inventory.item.views import ServiceViewSet
 
 
 @api_view()
@@ -39,6 +41,8 @@ router.register(r"organisations", OrganisationViewSet)
 router.register(r"users", UserViewSet)
 router.register(r"departments", DepartmentViewSet)
 router.register(r"permissions", PermissionViewSet)
+router.register(r"items", ItemViewSet)
+router.register(r"services", ServiceViewSet, basename="service")
 
 urlpatterns += router.urls
 urlpatterns += staticfiles_urlpatterns()

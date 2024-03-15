@@ -9,10 +9,13 @@ asgiref==3.7.2
 django==5.0.3
     # via
     #   -r requirements.in
+    #   django-filter
     #   django-tenant-users
     #   django-tenants
     #   djangorestframework
     #   djangorestframework-simplejwt
+django-filter==24.1
+    # via -r requirements.in
 django-tenant-users==1.3.0
     # via -r requirements.in
 django-tenants==3.6.1
