@@ -42,6 +42,8 @@ TENANT_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "tenant_users.permissions",
+    # internal apps
+    "apps.department",
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
