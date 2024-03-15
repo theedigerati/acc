@@ -1,9 +1,12 @@
+import contextlib
+from django.conf import settings
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from django_tenants.utils import schema_context
+from apps.department.models import Department
 from core.permissions import BelongsToOrganisation
 from .models import User
 from .serializers import (
@@ -171,3 +174,99 @@ class UserViewSet(ModelViewSet):
     # 4. Implemrnt user reset password confirm.
     # 5. Implement admin reset password.
     # 6. Implement deactivate user.
+
+
+class PermissionSourceOfTruthPermissions(DjangoModelPermissions):
+    perms_map = {"GET": ["user.change_user", "department.change_department"]}
+
+
+class PermissionViewSet(ModelViewSet):
+    queryset = Permission.objects.exclude(
+        content_type__app_label__in=["admin", "auth", "contenttypes"]
+    ).select_related("content_type")
+    serializer_class = PermissionSerializer
+
+    def get_permissions(self):
+        if self.action == "source_of_truth":
+            self.permission_classes = [
+                BelongsToOrganisation,
+                PermissionSourceOfTruthPermissions,
+            ]
+        return super().get_permissions()
+
+    @action(["get"], detail=False)
+    def source_of_truth(self, request, *args, **kwargs):
+        """
+        Return all available permissions but, categorised by predefined
+        categories in `settings.PERMISSION_CATEGORIES`.
+
+        Add an `active` bool flag on each permissions indicating that a
+        user or department has been assigned the permission.
+
+        Add an `inherited` bool flag on each permissions indicating that
+        a user has inherited the permission from a department. Default will
+        be false for all departments.
+
+        If user or department id value is not provided in request query params,
+        `active` & `inherited` flags will be false.
+
+        e.g:
+        "sales": {
+            "invoice": [
+                {
+                    "perm": {
+                        "id": 1,
+                        "name": "Can view invoice",
+                        "codename": "view_invoice"
+                    }
+                    "active": True,
+                    "inherited": True,
+                }
+            ]
+        }
+        """
+        perms_categories = settings.PERMISSION_CATEGORIES
+        perms_by_categories = {}
+        for perm in self.queryset:
+            perm_model = perm.content_type.name
+            for category, models in perms_categories.items():
+                if perm_model not in models:
+                    continue
+                if category not in perms_by_categories:
+                    perms_by_categories[category] = {}
+                perm_data = self._get_perm_data(request, perm)
+                if perm_model in perms_by_categories[category]:
+                    perms_by_categories[category][perm_model].append(perm_data)
+                else:
+                    perms_by_categories[category][perm_model] = [perm_data]
+        return Response(perms_by_categories)
+
+    def _get_perm_data(self, request, perm):
+        user_id = request.query_params.get("user", 0)
+        dept_id = request.query_params.get("department", 0)
+        user_object = None
+        dept_object = None
+
+        with contextlib.suppress(User.DoesNotExist):
+            user_object = User.objects.get(id=int(user_id))
+        with contextlib.suppress(Department.DoesNotExist):
+            dept_object = Department.objects.get(id=int(dept_id))
+
+        perm_dict = {"id": perm.id, "name": perm.name, "codename": perm.codename}
+
+        if user_object:
+            perm_string = f"{perm.content_type.app_label}.{perm.codename}"
+            return {
+                "perm": perm_dict,
+                "active": user_object.has_perm(perm_string),
+                "inherited": perm_string in user_object.get_group_permissions(),
+            }
+
+        if dept_object:
+            return {
+                "perm": perm_dict,
+                "active": dept_object.permissions.filter(id=perm.id).exists(),
+                "inherited": False,
+            }
+
+        return {"perm": perm_dict, "active": False, "inherited": False}

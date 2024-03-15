@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from django.conf import settings
 from apps.user.models import User
 
 
@@ -142,3 +143,73 @@ def test_list_user_permissions(client, test_user, user_object_with_org):
 # 1. Implement tests for user hierarchy update for each user type.
 # 2. Implement tests for user role hierarchy create and update
 #    for each user type.
+
+
+@pytest.mark.django_db
+def test_permissions_source_of_truth(client, test_user, dept_object):
+    url = reverse("permission-source-of-truth")
+
+    # no permisions
+    res = client.get(url)
+    assert res.status_code == 403
+
+    test_user.add_permissions("change_user", "change_department")
+    res = client.get(url)
+    assert res.status_code == 200
+    assert res.data.keys() == settings.PERMISSION_CATEGORIES.keys()
+
+    # source of truth for user
+    sot_user_url = url + "?user=" + str(test_user.id)
+    res = client.get(sot_user_url)
+    assert res.status_code == 200
+    user_model_permissions = next(
+        (
+            category_dict["user"]
+            for category_dict in res.data.values()
+            if "user" in category_dict
+        ),
+        None,
+    )
+    assert user_model_permissions
+    assert any(
+        perm_data["active"]
+        for perm_data in user_model_permissions
+        if perm_data["perm"]["codename"] == "change_user"
+    )
+
+    # source of truth for department
+    # dept_object.add_permissions("change_invoice")
+    # sot_dept_url = url + "?department=" + str(dept_object.id)
+    # res = client.get(sot_dept_url)
+    # assert res.status_code == 200
+    # invoice_model_permissions = next(
+    #     (
+    #         category_dict["invoice"]
+    #         for category_dict in res.data.values()
+    #         if "invoice" in category_dict
+    #     ),
+    #     None,
+    # )
+    # assert invoice_model_permissions
+    # assert any(
+    #     perm_data["active"]
+    #     for perm_data in invoice_model_permissions
+    #     if perm_data["perm"]["codename"] == "change_invoice"
+    # )
+
+    # source of truth for user in department
+    # dept_object.add_members([test_user])
+    # res = client.get(sot_user_url)
+    # invoice_model_permissions = next(
+    #     (
+    #         category_dict["invoice"]
+    #         for category_dict in res.data.values()
+    #         if "invoice" in category_dict
+    #     ),
+    #     None,
+    # )
+    # assert any(
+    #     perm_data["active"] and perm_data["inherited"]
+    #     for perm_data in invoice_model_permissions
+    #     if perm_data["perm"]["codename"] == "change_invoice"
+    # )
