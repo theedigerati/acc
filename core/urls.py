@@ -15,6 +15,7 @@ from rest_framework.routers import SimpleRouter
 
 from apps.organisation.views import OrganisationViewSet
 from apps.user.views import UserViewSet
+from apps.department.views import DepartmentViewSet
 
 
 @api_view()
@@ -35,6 +36,7 @@ urlpatterns = [
 router = SimpleRouter()
 router.register(r"organisations", OrganisationViewSet)
 router.register(r"users", UserViewSet)
+router.register(r"departments", DepartmentViewSet)
 
 urlpatterns += router.urls
 urlpatterns += staticfiles_urlpatterns()
