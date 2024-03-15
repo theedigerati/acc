@@ -178,3 +178,19 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
 }
+
+PERMISSION_CATEGORIES = {
+    "sales": [
+        "invoice",
+        "client",
+        "payment received",
+    ],
+    "purchase": [
+        "bill",
+        "vendor",
+        "payment made",
+        "expense",
+    ],
+    "organisation": ["user", "department", "organisation"],
+    "accounting": ["account", "account sub type", "tax"],
+}
