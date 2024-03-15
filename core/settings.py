@@ -44,6 +44,7 @@ TENANT_APPS = [
     "tenant_users.permissions",
     # internal apps
     "apps.department",
+    "apps.inventory.item",
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
