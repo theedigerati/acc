@@ -45,6 +45,7 @@ TENANT_APPS = [
     # internal apps
     "apps.department",
     "apps.inventory.item",
+    "apps.tax",
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
