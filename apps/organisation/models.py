@@ -6,6 +6,7 @@ from django_tenants.models import DomainMixin
 from tenant_users.tenants.tasks import provision_tenant
 from apps.user.models import User
 from core.abstract_models import AbstractAddress
+from apps.accounting.factory import AccountingFactory
 
 
 class Tenant(TenantBase):
@@ -50,6 +51,8 @@ class Organisation(models.Model):
                 self._create_tenant()
             finally:
                 self._add_all_meta_users()
+                accounting_factory = AccountingFactory(self.tenant.schema_name)
+                accounting_factory.generate_default_accounts()
         else:
             self._update_tenant()
 
