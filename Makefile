@@ -21,6 +21,9 @@ lint-fix:
 checkmigrations:
 	python manage.py makemigrations --check --no-input --dry-run
 
+migrations:
+	python manage.py makemigrations
+
 migrate:
 	python manage.py makemigrations && python manage.py migrate
 
