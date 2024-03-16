@@ -20,6 +20,7 @@ from apps.user.views import PermissionViewSet
 from apps.inventory.item.views import ItemViewSet
 from apps.inventory.item.views import ServiceViewSet
 from apps.tax.views import TaxViewSet
+from apps.accounting.views import AccountViewSet
 
 
 @api_view()
@@ -45,6 +46,7 @@ router.register(r"permissions", PermissionViewSet)
 router.register(r"items", ItemViewSet)
 router.register(r"services", ServiceViewSet, basename="service")
 router.register(r"taxes", TaxViewSet, basename="tax")
+router.register(r"accounts", AccountViewSet)
 
 urlpatterns += router.urls
 urlpatterns += staticfiles_urlpatterns()
