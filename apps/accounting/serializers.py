@@ -40,7 +40,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if not instance.editable:
-            return serializers.ValidationError(
+            raise serializers.ValidationError(
                 "This account cannot be edited because it is used for automated transactions"
             )
         return super().update(instance, validated_data)

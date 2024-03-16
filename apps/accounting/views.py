@@ -2,6 +2,7 @@ from django.db.models import Sum
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
+from rest_framework import status
 from apps.accounting.models import (
     Account,
     AccountSubType,
@@ -24,6 +25,16 @@ class AccountViewSet(ModelViewSet):
         if self.action == "transactions":
             return TransactionSerializer
         return self.serializer_class
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not instance.editable:
+            return Response(
+                "This account cannot be deleted because it is used for automated transactions.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["get"], detail=True)
     def siblings(self, request, *args, **kwargs):
