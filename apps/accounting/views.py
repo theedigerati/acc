@@ -6,11 +6,14 @@ from rest_framework import status
 from apps.accounting.models import (
     Account,
     AccountSubType,
+    JournalEntry,
+    Transaction,
 )
 from apps.accounting.serializers import (
     AccountSerializer,
     AccountSiblingsSerializer,
     AccountSubTypeSerializer,
+    JournalEntrySerializer,
     TransactionSerializer,
 )
 
@@ -63,3 +66,31 @@ class AccountViewSet(ModelViewSet):
                 for account in accounts
             }
         )
+
+
+class JournalEntryViewSet(ModelViewSet):
+    queryset = JournalEntry.objects
+    serializer_class = JournalEntrySerializer
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def create(self, request, *args, **kwargs):
+        request.data["created_by"] = request.user.id
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        self.record_transaction(serializer.save())
+
+    @action(["post"], detail=True)
+    def mark_as_published(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.mark_as_published()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def record_transaction(self, instance):
+        if not instance.is_draft:
+            Transaction.objects.record_journal_entry(instance)
