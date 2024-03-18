@@ -1,5 +1,7 @@
 import pytest
 from django.urls import reverse
+from django.contrib.contenttypes.models import ContentType
+from apps.accounting.models import Transaction, get_journal_next_number
 
 
 @pytest.mark.django_db()
@@ -74,3 +76,72 @@ def test_retrieve_update_delete_account(
     # delete fail
     res = client.delete(url)
     assert res.status_code == 400
+
+
+@pytest.mark.django_db
+def test_crud_journal_entry(client, test_user, journal_data, invalid_journal_data):
+    url = reverse("journal-entry-list")
+
+    # no permisions
+    res = client.post(url, journal_data, format="json")
+    assert res.status_code == 403
+    res = client.get(url)
+    assert res.status_code == 403
+
+    test_user.add_permissions("add_journalentry", "view_journalentry")
+
+    # create
+    next_number = get_journal_next_number()
+    res = client.post(url, journal_data, format="json")
+    assert res.status_code == 201
+    assert res.data["number"] == next_number
+    assert float(res.data["amount"]) == journal_data["lines"][0]["amount"]
+
+    # test transaction, journal entry is draft so transaction should not exist
+    journal_entry_id = res.data["id"]
+    contenttype = ContentType.objects.get(app_label="accounting", model="journalentry")
+    assert (
+        Transaction.objects.filter(
+            ref_type=contenttype, ref_id=journal_entry_id
+        ).exists()
+        is False
+    )
+    # mark journal_entry as published, transaction should exist now
+    url = reverse("journal-entry-mark-as-published", kwargs={"pk": journal_entry_id})
+    res = client.post(url)
+    assert Transaction.objects.filter(
+        ref_type=contenttype, ref_id=journal_entry_id
+    ).exists()
+
+    # create with invalid data
+    url = reverse("journal-entry-list")
+    journal_data["lines"].pop()
+    res = client.post(url, journal_data, format="json")
+    assert res.status_code == 400
+    res = client.post(url, invalid_journal_data, format="json")
+    assert res.status_code == 400
+
+    # list
+    res = client.get(url)
+    assert res.status_code == 200
+
+    # retrieve, update & delete
+    url = reverse("journal-entry-detail", kwargs={"pk": res.data[0]["id"]})
+
+    # retrieve
+    res = client.get(url)
+    assert res.status_code == 200
+
+    # no permissions
+    res = client.put(url, journal_data, format="json")
+    assert res.status_code == 403
+    res = client.delete(url)
+    assert res.status_code == 403
+
+    test_user.add_permissions("change_journalentry", "delete_journalentry")
+
+    # update & delete
+    res = client.put(url, journal_data, format="json")
+    assert res.status_code == 405
+    res = client.delete(url)
+    assert res.status_code == 405

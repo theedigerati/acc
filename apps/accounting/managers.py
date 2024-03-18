@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.db import transaction
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 from django.apps import apps
+from django.conf import settings
 
 
 class ActiveAccountManager(models.Manager):
@@ -57,7 +58,9 @@ class TransactionManager(models.Manager):
             "ref_id": kwargs["ref"].id,
             "ref": kwargs["ref"],
             "date": datetime.combine(
-                kwargs["date"], timezone.now().time(), timezone.utc
+                kwargs["date"],
+                django_timezone.now().time(),
+                timezone.utc if settings.USE_TZ else None,
             ),
             "name": kwargs["name"],
             "note": kwargs["note"],
