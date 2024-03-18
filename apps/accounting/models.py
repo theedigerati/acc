@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.core.exceptions import ValidationError
+
+from core.utils import get_next_number
 from .managers import ActiveAccountManager, TransactionManager
+
+
+def get_journal_next_number():
+    return get_next_number(JournalEntry, JournalEntry.NUMBER_PREFIX)
 
 
 class AccountType(models.TextChoices):
@@ -131,3 +138,67 @@ class Transaction(models.Model):
 
     def __str__(self) -> str:
         return f"{self.account}/{self.name} --> {self.amount}"
+
+
+class JournalEntry(models.Model):
+    name = models.CharField(max_length=50)
+    note = models.TextField()
+    date = models.DateField(auto_now_add=True)
+
+    # This is a unique journal number e.g JNL-00012,
+    NUMBER_PREFIX = "JNL"
+    number = models.CharField(
+        max_length=16, unique=True, default=get_journal_next_number
+    )
+
+    is_draft = models.BooleanField(default=True)
+    created_by = models.ForeignKey("user.User", on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def amount(self):
+        total_debit = 0
+        total_credit = 0
+        for line in self.lines.all():
+            if line.type == TransactionType.DEBIT:
+                total_debit += abs(line.amount)
+            else:
+                total_credit += abs(line.amount)
+        assert total_debit == total_credit
+        return total_debit
+
+    def mark_as_published(self):
+        if not self.is_draft:
+            return ValidationError("Journal Entry is already published!")
+        self.is_draft = False
+        self.save()
+        Transaction.objects.record_journal_entry(self)
+
+
+class JournalEntryLine(models.Model):
+    journal = models.ForeignKey(
+        JournalEntry, related_name="lines", on_delete=models.CASCADE
+    )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    type = models.CharField(max_length=6, choices=TransactionType.choices)
+
+    def __str__(self) -> str:
+        return super().__str__()
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            return super().save(*args, **kwargs)
+        if self.type is TransactionType.DEBIT and self.account.sub_type.type not in [
+            AccountType.ASSET,
+            AccountType.EXPENSE,
+        ]:
+            self.amount = -(self.amount)
+        if self.type is TransactionType.CREDIT and self.account.sub_type.type in [
+            AccountType.ASSET,
+            AccountType.EXPENSE,
+        ]:
+            self.amount = -(self.amount)
+        return super().save(*args, **kwargs)
