@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
-from apps.accounting.models import Tax
-from apps.accounting.serializers import TaxSerializer
+from apps.tax.models import Tax
+from apps.tax.serializers import TaxSerializer
 from apps.inventory.item.models import Item
 from apps.inventory.item.serializers import SaleItemSerializer, SalesPersonSerializer
 from apps.sales.client.models import Client

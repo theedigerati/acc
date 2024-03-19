@@ -1,15 +1,9 @@
-from rest_framework import serializers
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.response import Response
 from .models import Tax
-
-
-class TaxSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tax
-        fields = "__all__"
+from .serializers import TaxSerializer
 
 
 class TaxViewSet(ModelViewSet):

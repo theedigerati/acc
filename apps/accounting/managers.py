@@ -108,6 +108,14 @@ class TransactionManager(models.Manager):
         }
         self._record_transaction(**transaction_data)
 
+    def delete_resource(self, resource):
+        assert isinstance(resource, (Invoice, PaymentReceived))
+        contenttype = ContentType.objects.get(
+            app_label=resource._meta.app_label,
+            model=resource._meta.model_name,
+        )
+        self.get_queryset().filter(ref_type=contenttype, ref_id=resource.id).delete()
+
     def _record_transaction(self, **kwargs):
         account_model = self.model.account.field.related_model
         queryset = self.get_queryset()
