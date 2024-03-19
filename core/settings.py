@@ -47,6 +47,7 @@ TENANT_APPS = [
     "apps.inventory.item",
     "apps.tax",
     "apps.accounting",
+    "apps.address",
     "apps.sales.client",
 ]
 
