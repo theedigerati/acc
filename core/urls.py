@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.routers import SimpleRouter
 
 from apps.organisation.views import OrganisationViewSet
+from apps.sales.client.views import ClientViewSet
 from apps.user.views import UserViewSet
 from apps.department.views import DepartmentViewSet
 from apps.user.views import PermissionViewSet
@@ -48,6 +49,7 @@ router.register(r"services", ServiceViewSet, basename="service")
 router.register(r"taxes", TaxViewSet, basename="tax")
 router.register(r"accounts", AccountViewSet)
 router.register(r"journal-entries", JournalEntryViewSet, basename="journal-entry")
+router.register(r"clients", ClientViewSet)
 
 urlpatterns += router.urls
 urlpatterns += staticfiles_urlpatterns()

@@ -6,4 +6,5 @@ pytest_plugins = [
     "tests.fixtures.data.inventory",
     "tests.fixtures.data.general",
     "tests.fixtures.data.accounting",
+    "tests.fixtures.data.sales",
 ]

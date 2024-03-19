@@ -2,7 +2,6 @@ import pytest
 from mixer.backend.django import mixer
 
 
-# ===== TAX APP =====
 @pytest.fixture()
 def tax_data():
     return {"name": "VAT", "rate": 5.5}
@@ -22,3 +21,23 @@ def tax_bulk_data():
         {"name": "Sales Tax", "rate": 7},
         {"id": tax.id, "name": "Consumptions", "rate": 8},
     ]
+
+
+@pytest.fixture()
+def address_data():
+    return {
+        "line1": "2 Brown Str.,",
+        "line2": "Opp. New Road",
+        "city": "city",
+        "state": "state",
+        "postcode": "94105",
+        "country": "country",
+    }
+
+
+@pytest.fixture()
+def address_object():
+    """
+    Address object created with mixer.
+    """
+    return mixer.blend("address.Address")
