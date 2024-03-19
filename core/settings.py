@@ -49,7 +49,7 @@ TENANT_APPS = [
     "apps.accounting",
     "apps.address",
     "apps.sales.client",
-    "apps.sales",
+    "apps.sales.invoice",
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
