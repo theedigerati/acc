@@ -41,3 +41,15 @@ def address_object():
     Address object created with mixer.
     """
     return mixer.blend("address.Address")
+
+
+@pytest.fixture()
+def items():
+    return mixer.cycle(3).blend(
+        "item.Item", type="goods", selling_price=100, cost_price=50
+    )
+
+
+@pytest.fixture()
+def taxes():
+    return mixer.cycle(2).blend("tax.Tax", rate=2.5)
