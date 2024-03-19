@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone as django_timezone
 from django.apps import apps
 from django.conf import settings
+from apps.sales.invoice.models import Invoice, PaymentReceived
 
 
 class ActiveAccountManager(models.Manager):
@@ -24,6 +25,67 @@ class TransactionManager(models.Manager):
           Credit transactions decrease Asset & Expense accounts,
           increase liability, equity & income accounts.
     """
+
+    def record_invoice(self, invoice):
+        assert isinstance(invoice, Invoice)
+        transaction_data = {
+            "date": invoice.issued_date,
+            "ref": invoice,
+            "name": f"Invoice {invoice.number}",
+            "note": "Invoice",
+            "transactions": [
+                {
+                    "account_code": "1200",
+                    "type": "debit",
+                    "amount": invoice.total_incl_tax,
+                },
+                {
+                    "account_code": "4000-3",
+                    "type": "credit",
+                    "amount": invoice.total_excl_tax,
+                },
+                *[
+                    {
+                        "name": f"{tax_name} for Invoice {invoice.number}",
+                        "account_code": "2005-1",
+                        "type": "credit",
+                        "amount": tax_amount,
+                    }
+                    for tax_name, tax_amount in invoice.generate_each_tax_total().items()
+                ],
+            ],
+        }
+        self._record_transaction(**transaction_data)
+
+    def record_payment_received(self, payment):
+        assert isinstance(payment, PaymentReceived)
+        transaction_data = {
+            "date": payment.date,
+            "ref": payment,
+            "name": (
+                f"Payment for {payment.invoice.number}"
+                if payment.invoice
+                else "Payment received"
+            ),
+            "note": (
+                payment.description or "Invoice payment"
+                if payment.invoice
+                else payment.description or "Payment received"
+            ),
+            "transactions": [
+                {
+                    "account_code": "1000-1",
+                    "type": "debit",
+                    "amount": payment.amount,
+                },
+                {
+                    "account_code": "1200",
+                    "type": "credit",
+                    "amount": -(payment.amount),
+                },
+            ],
+        }
+        self._record_transaction(**transaction_data)
 
     def record_journal_entry(self, journal_entry):
         JournalEntry = apps.get_model("accounting.JournalEntry")
