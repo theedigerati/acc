@@ -1,3 +1,6 @@
 from django.db import models
+from core.abstract_models import AbstractAddress
 
-# Create your models here.
+
+class Address(AbstractAddress):
+    phone_number = models.CharField(max_length=16, blank=True)
