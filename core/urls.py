@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.routers import SimpleRouter
 
 from apps.organisation.views import OrganisationViewSet
+from apps.purchase.vendor.views import VendorViewSet
 from apps.sales.client.views import ClientViewSet
 from apps.sales.invoice.views import InvoiceViewSet, PaymentReceivedViewSet
 from apps.user.views import UserViewSet
@@ -55,6 +56,7 @@ router.register(r"invoices", InvoiceViewSet)
 router.register(
     r"payments-received", PaymentReceivedViewSet, basename="payment-received"
 )
+router.register(r"vendors", VendorViewSet)
 
 urlpatterns += router.urls
 urlpatterns += staticfiles_urlpatterns()
