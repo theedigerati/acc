@@ -44,7 +44,6 @@ def invoice_object():
 def invoice_data(client_object, items, taxes):
     return {
         "client": client_object.id,
-        # "number": "INV-0001",
         "salesperson": "",
         "lines": [
             {
@@ -81,7 +80,6 @@ def invoice_data(client_object, items, taxes):
 def invoice_data_partial(invoice_object, client_object, items, taxes):
     return {
         "client": client_object.id,
-        "number": "SO-0002",
         "salesperson": "",
         "lines": [
             {
@@ -115,7 +113,6 @@ def invoice_data_with_invalid_lines(client_object, items, taxes):
 
     return {
         "client": client_object.id,
-        "number": "INV-0002",
         "salesperson": "",
         "lines": [
             {
