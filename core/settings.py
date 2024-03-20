@@ -51,6 +51,7 @@ TENANT_APPS = [
     "apps.sales.client",
     "apps.sales.invoice",
     "apps.purchase.vendor",
+    "apps.purchase.bill",
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [
