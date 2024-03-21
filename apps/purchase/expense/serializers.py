@@ -2,7 +2,8 @@ from rest_framework import serializers
 from apps.purchase.expense.models import Expense
 from apps.tax.models import Tax
 from apps.accounting.models import Account
-from apps.accounting.serializers import AccountShallowSerializer, TaxSerializer
+from apps.accounting.serializers import AccountShallowSerializer
+from apps.tax.serializers import TaxSerializer
 from apps.purchase.vendor.models import Vendor
 from apps.purchase.vendor.serializers import VendorShallowSerializer
 from core.serializers.fields import PrimaryKey_To_ObjectField

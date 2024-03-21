@@ -144,3 +144,19 @@ def payment_made_data(bill_object):
         "date": "2023-05-19",
         "mode": "Bank Transfer",
     }
+
+
+@pytest.fixture()
+def expense_object():
+    return mixer.blend("expense.Expense")
+
+
+@pytest.fixture()
+def expense_data(vendor_object, taxes):
+    return {
+        "vendor": vendor_object.id,
+        "account": 1,
+        "amount": 20_000,
+        "taxes": [tax.id for tax in taxes],
+        "paid_through": 2,
+    }
