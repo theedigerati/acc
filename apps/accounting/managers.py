@@ -7,6 +7,7 @@ from django.utils import timezone as django_timezone
 from django.apps import apps
 from django.conf import settings
 from apps.purchase.bill.models import Bill, PaymentMade
+from apps.purchase.expense.models import Expense
 from apps.sales.invoice.models import Invoice, PaymentReceived
 
 
@@ -142,6 +143,38 @@ class TransactionManager(models.Manager):
         }
         self._record_transaction(**transaction_data)
 
+    def record_expense(self, expense):
+        assert isinstance(expense, Expense)
+        transaction_data = {
+            "date": expense.date,
+            "ref": expense,
+            "name": f"Expense ({expense.account.name})",
+            "note": expense.notes,
+            "transactions": [
+                {
+                    "name": "Expense",
+                    "account_code": expense.account.code,
+                    "type": "debit",
+                    "amount": expense.amount_excl_tax,
+                },
+                {
+                    "account_code": expense.paid_through.code,
+                    "type": "credit",
+                    "amount": -(expense.amount_incl_tax),
+                },
+                *[
+                    {
+                        "name": f"{tax.name} for Expense",
+                        "account_code": "6016",
+                        "type": "debit",
+                        "amount": expense.tax_amount(tax.rate),
+                    }
+                    for tax in expense.taxes.all()
+                ],
+            ],
+        }
+        self._record_transaction(**transaction_data)
+
     def record_journal_entry(self, journal_entry):
         JournalEntry = apps.get_model("accounting.JournalEntry")
         assert isinstance(journal_entry, JournalEntry)
@@ -164,7 +197,9 @@ class TransactionManager(models.Manager):
         self._record_transaction(**transaction_data)
 
     def delete_resource(self, resource):
-        assert isinstance(resource, (Invoice, PaymentReceived, Bill, PaymentMade))
+        assert isinstance(
+            resource, (Invoice, PaymentReceived, Bill, PaymentMade, Expense)
+        )
         contenttype = ContentType.objects.get(
             app_label=resource._meta.app_label,
             model=resource._meta.model_name,

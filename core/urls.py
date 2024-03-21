@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework.routers import SimpleRouter
 from apps.organisation.views import OrganisationViewSet
 from apps.purchase.bill.views import BillViewSet, PaymentMadeViewSet
+from apps.purchase.expense.views import ExpenseViewSet
 from apps.purchase.vendor.views import VendorViewSet
 from apps.sales.client.views import ClientViewSet
 from apps.sales.invoice.views import InvoiceViewSet, PaymentReceivedViewSet
@@ -59,6 +60,7 @@ router.register(
 router.register(r"vendors", VendorViewSet)
 router.register(r"bills", BillViewSet)
 router.register(r"payments-made", PaymentMadeViewSet, basename="payment-made")
+router.register(r"expenses", ExpenseViewSet)
 
 urlpatterns += router.urls
 urlpatterns += staticfiles_urlpatterns()
