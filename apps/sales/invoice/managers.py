@@ -10,8 +10,7 @@ class InvoiceManager(models.Manager):
 
     def get_outstanding(self):
         """
-        Calculate total amount due for all active invoices.
-        Amount due for invoices in draft are not added to "total".
+        Calculate amount due for all unarchived invoices.
         """
         draft, overdue, total = 0, 0, 0
         for invoice in (
