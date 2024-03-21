@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone as django_timezone
 from django.apps import apps
 from django.conf import settings
+from apps.purchase.bill.models import Bill, PaymentMade
 from apps.sales.invoice.models import Invoice, PaymentReceived
 
 
@@ -87,6 +88,60 @@ class TransactionManager(models.Manager):
         }
         self._record_transaction(**transaction_data)
 
+    def record_bill(self, bill):
+        assert isinstance(bill, Bill)
+        transaction_data = {
+            "date": bill.bill_date,
+            "ref": bill,
+            "name": f"Bill {bill.number}",
+            "note": "Bill",
+            "transactions": [
+                {
+                    "account_code": "2000",
+                    "type": "credit",
+                    "amount": bill.total_incl_tax,
+                },
+                *[
+                    {
+                        "name": f"{tax_name} for Bill {bill.number}",
+                        "account_code": "6016",
+                        "type": "debit",
+                        "amount": tax_amount,
+                    }
+                    for tax_name, tax_amount in bill.generate_each_tax_total().items()
+                ],
+            ],
+        }
+        self._record_transaction(**transaction_data)
+
+    def record_payment_made(self, payment):
+        assert isinstance(payment, PaymentMade)
+        transaction_data = {
+            "date": payment.date,
+            "ref": payment,
+            "name": (
+                f"Payment for {payment.bill.number}" if payment.bill else "Payment made"
+            ),
+            "note": (
+                payment.description or "Bill payment"
+                if payment.bill
+                else payment.description or "Payment made"
+            ),
+            "transactions": [
+                {
+                    "account_code": "1000-1",
+                    "type": "credit",
+                    "amount": -(payment.amount),
+                },
+                {
+                    "account_code": "2000",
+                    "type": "debit",
+                    "amount": -(payment.amount),
+                },
+            ],
+        }
+        self._record_transaction(**transaction_data)
+
     def record_journal_entry(self, journal_entry):
         JournalEntry = apps.get_model("accounting.JournalEntry")
         assert isinstance(journal_entry, JournalEntry)
@@ -109,7 +164,7 @@ class TransactionManager(models.Manager):
         self._record_transaction(**transaction_data)
 
     def delete_resource(self, resource):
-        assert isinstance(resource, (Invoice, PaymentReceived))
+        assert isinstance(resource, (Invoice, PaymentReceived, Bill, PaymentMade))
         contenttype = ContentType.objects.get(
             app_label=resource._meta.app_label,
             model=resource._meta.model_name,
