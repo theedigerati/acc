@@ -28,3 +28,122 @@ def vendor_data_partial():
 @pytest.fixture()
 def vendor_object():
     return mixer.blend("vendor.Vendor")
+
+
+@pytest.fixture()
+def bill_object():
+    bill = mixer.blend("bill.Bill")
+    mixer.blend("bill.BillLine", bill=bill, rate=1000, quantity=20)
+    return bill
+
+
+@pytest.fixture()
+def bill_data(vendor_object, items, taxes):
+    return {
+        "vendor": vendor_object.id,
+        "number": "B-0001",
+        "lines": [
+            {
+                "item": items[0].id,
+                "description": "rando",
+                "quantity": 20,
+                "rate": 15_000,
+                "taxes": [tax.id for tax in taxes],
+                "order": 0,
+            },
+            {
+                "id": 0,
+                "name": "A new product",
+                "description": "rando",
+                "quantity": 20,
+                "rate": 15_000,
+                "taxes": [],
+                "order": 1,
+            },
+            {
+                "id": 0,
+                "item": items[2].id,
+                "description": "rando",
+                "quantity": 20,
+                "rate": 15_000,
+                "taxes": [],
+                "order": 2,
+            },
+        ],
+    }
+
+
+@pytest.fixture()
+def bill_data_partial(bill_object, vendor_object, items, taxes):
+    return {
+        "vendor": vendor_object.id,
+        "number": "B-0002",
+        "lines": [
+            {
+                "id": bill_object.lines.first().id,
+                "item": items[0].id,
+                "description": "rando",
+                "quantity": 20,
+                "rate": 15_000,
+                "taxes": [tax.id for tax in taxes],
+                "order": 0,
+            },
+            {
+                "id": 0,
+                "item": items[1].id,
+                "description": "rando",
+                "quantity": 20,
+                "rate": 15_000,
+                "taxes": [tax.id for tax in taxes],
+                "order": 1,
+            },
+        ],
+    }
+
+
+@pytest.fixture()
+def bill_data_with_invalid_lines(vendor_object, items, taxes):
+    """
+    Bill data with lines that belong to another bill.
+    """
+    lines = mixer.cycle(2).blend("bill.BillLine")
+
+    return {
+        "vendor": vendor_object.id,
+        "number": "B-0002",
+        "lines": [
+            {
+                "id": lines[0].id,
+                "item": items[0].id,
+                "description": "rando",
+                "quantity": 20,
+                "rate": 15_000,
+                "taxes": [tax.id for tax in taxes],
+                "order": 0,
+            },
+            {
+                "id": lines[1].id,
+                "item": items[1].id,
+                "description": "rando",
+                "quantity": 20,
+                "rate": 15_000,
+                "taxes": [],
+                "order": 1,
+            },
+        ],
+    }
+
+
+@pytest.fixture()
+def payment_made_object(bill_object):
+    return mixer.blend("bill.PaymentMade", bill=bill_object)
+
+
+@pytest.fixture()
+def payment_made_data(bill_object):
+    return {
+        "bill": bill_object.id,
+        "amount": 5000,
+        "date": "2023-05-19",
+        "mode": "Bank Transfer",
+    }
