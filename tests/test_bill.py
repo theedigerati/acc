@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from django.contrib.contenttypes.models import ContentType
 from apps.accounting.models import Transaction
-from apps.purchase.bill.models import BillStatus
+from apps.purchase.bill.models import BillStatus, get_bill_next_number
 from mixer.backend.django import mixer
 
 
@@ -17,9 +17,14 @@ def test_create_list_bill(client, test_user, bill_data):
 
     test_user.add_permissions("add_bill", "view_bill", "view_transation")
     # create
+    next_number = get_bill_next_number()
     res = client.post(url, bill_data, format="json")
     assert res.status_code == 201
+    assert res.data["number"] == next_number
     assert len(res.data["lines"]) == len(bill_data["lines"])
+    next_number = get_bill_next_number()
+    res = client.post(url, bill_data, format="json")
+    assert res.data["number"] == next_number
 
     # test transaction, bill is draft so transaction should not exist
     bill_id = res.data["id"]

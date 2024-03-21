@@ -41,7 +41,6 @@ def bill_object():
 def bill_data(vendor_object, items, taxes):
     return {
         "vendor": vendor_object.id,
-        "number": "B-0001",
         "lines": [
             {
                 "item": items[0].id,
@@ -77,7 +76,6 @@ def bill_data(vendor_object, items, taxes):
 def bill_data_partial(bill_object, vendor_object, items, taxes):
     return {
         "vendor": vendor_object.id,
-        "number": "B-0002",
         "lines": [
             {
                 "id": bill_object.lines.first().id,
@@ -110,7 +108,6 @@ def bill_data_with_invalid_lines(vendor_object, items, taxes):
 
     return {
         "vendor": vendor_object.id,
-        "number": "B-0002",
         "lines": [
             {
                 "id": lines[0].id,
