@@ -2,12 +2,6 @@ from django.db import models
 
 
 class InvoiceManager(models.Manager):
-    def active(self):
-        return self.get_queryset().filter(archived=False)
-
-    def active_not_draft(self):
-        return self.get_queryset().filter(is_draft=False, archived=False)
-
     def get_outstanding(self):
         """
         Calculate amount due for all unarchived invoices.

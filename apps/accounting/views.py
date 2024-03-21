@@ -87,8 +87,7 @@ class JournalEntryViewSet(ModelViewSet):
 
     @action(["post"], detail=True)
     def mark_as_published(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.mark_as_published()
+        self.get_object().mark_as_published()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def record_transaction(self, instance):

@@ -17,8 +17,7 @@ class InvoiceViewSet(ModelViewSet):
         return self.serializer_class
 
     def perform_create(self, serializer):
-        instance = serializer.save()
-        self.record_transaction(instance)
+        self.record_transaction(serializer.save())
 
     def perform_update(self, serializer):
         self.record_transaction(serializer.save())
@@ -32,14 +31,12 @@ class InvoiceViewSet(ModelViewSet):
 
     @action(["post"], detail=True)
     def move_to_draft(self, request, pk=None):
-        instance = self.get_object()
-        instance.move_to_draft()
+        self.get_object().move_to_draft()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["post"], detail=True)
     def mark_as_sent(self, request, pk=None):
-        instance = self.get_object()
-        instance.mark_as_sent()
+        self.get_object().mark_as_sent()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["get"], detail=False)
