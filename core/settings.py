@@ -60,7 +60,8 @@ INSTALLED_APPS = list(SHARED_APPS) + [
 ]
 
 MIDDLEWARE = [
-    "django_tenants.middleware.TenantSubfolderMiddleware",
+    # "django_tenants.middleware.TenantSubfolderMiddleware",
+    "django_tenants.middleware.main.TenantMainMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -165,7 +166,7 @@ MANAGER_USER_RESTRICTIONS = [
 # Multinants settings
 DATABASE_ROUTERS = ("django_tenants.routers.TenantSyncRouter",)
 TENANT_USERS_DOMAIN = config("APP_DOMAIN_NAME", default="localhost")
-TENANT_SUBFOLDER_PREFIX = "org"
+# TENANT_SUBFOLDER_PREFIX = "org"
 TENANT_MODEL = "organisation.Tenant"
 TENANT_DOMAIN_MODEL = "organisation.Domain"
 BASE_TENANT_SLUG = config("BASE_TENANT_SLUG", default="acme")

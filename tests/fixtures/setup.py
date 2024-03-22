@@ -16,12 +16,12 @@ PUBLIC_EMAIL = settings.BASE_TENANT_OWNER_EMAIL
 TEST_USER_EMAIL = "test@localhost"
 DEFAULT_PASSWORD = "password"
 TEST_TENANT_SLUG = "test"
-TENANT_SUBFOLDER_PREFIX = settings.TENANT_SUBFOLDER_PREFIX
+TENANT_SUBFOLDER_PREFIX = getattr(settings, "TENANT_SUBFOLDER_PREFIX", None)
 
 
 @pytest.fixture()
 def client(test_user):
-    api_client = CustomAPIClient(SERVER_NAME=CLIENT_DOMAIN_NAME)
+    api_client = CustomAPIClient(SERVER_NAME=f"{TEST_TENANT_SLUG}.{CLIENT_DOMAIN_NAME}")
     url = reverse("jwt-login")
     res = api_client.post(url, {"email": test_user.email, "password": DEFAULT_PASSWORD})
     api_client.credentials(HTTP_AUTHORIZATION="Bearer " + res.data["access"])
@@ -80,8 +80,13 @@ def _make_public_tenant():
 
 
 class CustomAPIClient(APIClient):
+    def __init__(self, subfolder_tenancy=False, **kwargs):
+        self.subfolder_tenancy = subfolder_tenancy
+        super().__init__(**kwargs)
+
     def request(self, **kwargs):
-        kwargs["PATH_INFO"] = (
-            f"/{TENANT_SUBFOLDER_PREFIX}/{TEST_TENANT_SLUG}" + kwargs["PATH_INFO"]
-        )
+        if self.subfolder_tenancy:
+            kwargs["PATH_INFO"] = (
+                f"/{TENANT_SUBFOLDER_PREFIX}/{TEST_TENANT_SLUG}" + kwargs["PATH_INFO"]
+            )
         return super().request(**kwargs)
