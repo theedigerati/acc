@@ -178,38 +178,38 @@ def test_permissions_source_of_truth(client, test_user, dept_object):
     )
 
     # source of truth for department
-    # dept_object.add_permissions("change_invoice")
-    # sot_dept_url = url + "?department=" + str(dept_object.id)
-    # res = client.get(sot_dept_url)
-    # assert res.status_code == 200
-    # invoice_model_permissions = next(
-    #     (
-    #         category_dict["invoice"]
-    #         for category_dict in res.data.values()
-    #         if "invoice" in category_dict
-    #     ),
-    #     None,
-    # )
-    # assert invoice_model_permissions
-    # assert any(
-    #     perm_data["active"]
-    #     for perm_data in invoice_model_permissions
-    #     if perm_data["perm"]["codename"] == "change_invoice"
-    # )
+    dept_object.add_permissions("change_invoice")
+    sot_dept_url = url + "?department=" + str(dept_object.id)
+    res = client.get(sot_dept_url)
+    assert res.status_code == 200
+    invoice_model_permissions = next(
+        (
+            category_dict["invoice"]
+            for category_dict in res.data.values()
+            if "invoice" in category_dict
+        ),
+        None,
+    )
+    assert invoice_model_permissions
+    assert any(
+        perm_data["active"]
+        for perm_data in invoice_model_permissions
+        if perm_data["perm"]["codename"] == "change_invoice"
+    )
 
     # source of truth for user in department
-    # dept_object.add_members([test_user])
-    # res = client.get(sot_user_url)
-    # invoice_model_permissions = next(
-    #     (
-    #         category_dict["invoice"]
-    #         for category_dict in res.data.values()
-    #         if "invoice" in category_dict
-    #     ),
-    #     None,
-    # )
-    # assert any(
-    #     perm_data["active"] and perm_data["inherited"]
-    #     for perm_data in invoice_model_permissions
-    #     if perm_data["perm"]["codename"] == "change_invoice"
-    # )
+    dept_object.add_members([test_user])
+    res = client.get(sot_user_url)
+    invoice_model_permissions = next(
+        (
+            category_dict["invoice"]
+            for category_dict in res.data.values()
+            if "invoice" in category_dict
+        ),
+        None,
+    )
+    assert any(
+        perm_data["active"] and perm_data["inherited"]
+        for perm_data in invoice_model_permissions
+        if perm_data["perm"]["codename"] == "change_invoice"
+    )

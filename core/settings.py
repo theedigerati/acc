@@ -190,4 +190,16 @@ SIMPLE_JWT = {
 
 PERMISSION_CATEGORIES = {
     "organisation": ["user", "department", "organisation"],
+    "accounting": ["tax", "account", "account sub type"],
+    "sales": [
+        "invoice",
+        "client",
+        "payment received",
+    ],
+    "purchase": [
+        "bill",
+        "vendor",
+        "payment made",
+        "expense",
+    ],
 }
