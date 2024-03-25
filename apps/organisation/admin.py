@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import Tenant, OrgAddress, Organisation, Domain
 
-# Register your models here.
+admin.site.register(Tenant)
+admin.site.register(OrgAddress)
+admin.site.register(Organisation)
+admin.site.register(Domain)

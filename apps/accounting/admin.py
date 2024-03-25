@@ -1,3 +1,7 @@
 from django.contrib import admin
+from apps.accounting.models import Account, AccountSubType, Transaction
 
-# Register your models here.
+
+admin.site.register(AccountSubType)
+admin.site.register(Account)
+admin.site.register(Transaction)
