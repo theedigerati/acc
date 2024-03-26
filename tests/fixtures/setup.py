@@ -21,7 +21,7 @@ TENANT_SUBFOLDER_PREFIX = getattr(settings, "TENANT_SUBFOLDER_PREFIX", None)
 
 @pytest.fixture()
 def client(test_user):
-    api_client = CustomAPIClient(SERVER_NAME=f"{TEST_TENANT_SLUG}.{CLIENT_DOMAIN_NAME}")
+    api_client = CustomAPIClient(subfolder_tenancy=True, SERVER_NAME=CLIENT_DOMAIN_NAME)
     url = reverse("jwt-login")
     res = api_client.post(url, {"email": test_user.email, "password": DEFAULT_PASSWORD})
     api_client.credentials(HTTP_AUTHORIZATION="Bearer " + res.data["access"])

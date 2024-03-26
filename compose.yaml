@@ -19,6 +19,11 @@ services:
     command: ./init.sh
     ports:
       - "8000:8000"
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /code
     env_file:
       - ./.env
     depends_on:

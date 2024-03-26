@@ -1,7 +1,9 @@
 #!/bin/sh
 
 echo "Building the project..."
-pip install -r requirements.txt
+# pip install -r requirements.txt
+pip install --upgrade pip pip-tools
+pip-sync requirements.txt requirements_dev.txt
 
 echo "Collect Static..."
 python manage.py collectstatic --no-input

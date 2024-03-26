@@ -33,11 +33,17 @@ class Command(BaseCommand):
     @transaction.atomic
     def setup_default_organisation(self, public_owner):
         if Organisation.objects.first() is None:
+            self.stdout.write("updating public owner details...")
+            owner = User.objects.get(email=public_owner)
+            owner.first_name = "Meta"
+            owner.last_name = "User"
+            owner.role = "meta"
+            owner.set_password("password")
+            owner.save()
+
             self.stdout.write("creating default organisation...")
             org_name = "default"
-            provision_tenant(
-                tenant_name=org_name, tenant_slug=org_name, user_email=public_owner
-            )
+            provision_tenant(tenant_name=org_name, tenant_slug=org_name, user_email=public_owner)
             tenant = Tenant.objects.get(slug=org_name)
             address = OrgAddress.objects.create(
                 line1="25 Rahman Str.",
@@ -53,14 +59,6 @@ class Command(BaseCommand):
                 tenant=tenant,
             )
             self.stdout.write(f"{org.name} has been created successfully")
-
-            self.stdout.write("updating public owner details...")
-            owner = User.objects.get(email=public_owner)
-            owner.first_name = "Meta"
-            owner.last_name = "User"
-            owner.role = "meta"
-            owner.set_password("password")
-            owner.save()
             self.stdout.write("Tenancy setup done!")
         else:
             self.stdout.write("Default organisation already exists!")
