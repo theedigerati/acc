@@ -70,11 +70,11 @@ class Organisation(models.Model):
     def users(self):
         return self.tenant.user_set.count()
 
-    def add_users(self, users: list = []):
+    def add_users(self, users: list = [], is_meta_users=False):
         res = {"added": 0, "exist": 0}
         for user in users:
             try:
-                self.tenant.add_user(user)
+                self.tenant.add_user(user, is_superuser=is_meta_users, is_staff=is_meta_users)
                 user.assign_default_permissions()
                 res["added"] += 1
             except ExistsError:
@@ -105,18 +105,17 @@ class Organisation(models.Model):
             tenant_name=self.name,
             tenant_slug=tenant_slug,
             user_email=settings.BASE_TENANT_OWNER_EMAIL,
+            is_staff=True,
         )
         self.tenant = Tenant.objects.get(slug=tenant_slug)
 
     def _update_tenant(self):
         tenant_slug = self.get_tenant_slug()
-        Tenant.objects.filter(id=self.tenant.id).update(
-            name=self.name, slug=tenant_slug
-        )
+        Tenant.objects.filter(id=self.tenant.id).update(name=self.name, slug=tenant_slug)
 
     def _add_all_meta_users(self):
         meta_users = User.objects.filter(role=User.META)
-        self.add_users(list(meta_users))
+        self.add_users(list(meta_users), is_meta_users=True)
 
 
 class Domain(DomainMixin):
