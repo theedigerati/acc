@@ -29,8 +29,30 @@ services:
     depends_on:
       - db
 
+  celery:
+    networks:
+      - internal
+    build: .
+    command: celery --app=core worker --loglevel=info
+    volumes:
+      - celery:/data
+    env_file:
+      - ./.env
+    environment:
+      - CELERY_BROKER=${REDIS_URL:?}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:?}
+    depends_on:
+      - drf
+      - redis
+
+  redis:
+    networks:
+      - internal
+    image: redis
+
 volumes:
   db:
+  celery:
 
 networks:
   internal:

@@ -1,12 +1,16 @@
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from tenant_users.tenants.models import TenantBase, ExistsError, DeleteError
+from tenant_users.tenants.models import (
+    TenantBase,
+    ExistsError,
+    DeleteError,
+    get_public_schema_name,
+)
 from django_tenants.models import DomainMixin
 from tenant_users.tenants.tasks import provision_tenant
 from apps.user.models import User
 from core.abstract_models import AbstractAddress
-from apps.accounting.factory import AccountingFactory
 
 
 class Tenant(TenantBase):
@@ -33,6 +37,9 @@ class Organisation(models.Model):
         "organisation.Tenant", related_name="organisation", on_delete=models.CASCADE
     )
 
+    # celery task id for tenancy setup
+    task_id = models.CharField(max_length=50, blank=True)
+
     class Meta:
         unique_together = ("name", "branch")
         permissions = [
@@ -48,12 +55,11 @@ class Organisation(models.Model):
             try:
                 self.tenant
             except ObjectDoesNotExist:
-                self._create_tenant()
-            finally:
-                self._add_all_meta_users()
-                accounting_factory = AccountingFactory(self.tenant.schema_name)
-                accounting_factory.generate_default_accounts()
-        else:
+                # we'll use the public tenant for now
+                # actual tenant will be created in a celery task on the view
+                public_tenant = Tenant.objects.get(schema_name=get_public_schema_name())
+                self.tenant = public_tenant
+        elif self.tenant.schema_name != get_public_schema_name():
             self._update_tenant()
 
         super().save(*args, **kwargs)
@@ -111,7 +117,14 @@ class Organisation(models.Model):
 
     def _update_tenant(self):
         tenant_slug = self.get_tenant_slug()
+        if self.tenant.slug == tenant_slug:
+            return
         Tenant.objects.filter(id=self.tenant.id).update(name=self.name, slug=tenant_slug)
+        if hasattr(settings, "TENANT_SUBFOLDER_PREFIX"):
+            tenant_domain = tenant_slug
+        else:
+            tenant_domain = f"{tenant_slug}.{settings.TENANT_USERS_DOMAIN}"
+        Domain.objects.filter(tenant=self.tenant).update(domain=tenant_domain)
 
     def _add_all_meta_users(self):
         meta_users = User.objects.filter(role=User.META)

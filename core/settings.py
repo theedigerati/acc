@@ -32,6 +32,7 @@ SHARED_APPS = [
     "rest_framework",
     "tenant_users.permissions",
     "tenant_users.tenants",
+    "django_celery_results",
     # internal apps
     "apps.user",
     "apps.organisation",
@@ -55,9 +56,7 @@ TENANT_APPS = [
     "apps.purchase.expense",
 ]
 
-INSTALLED_APPS = list(SHARED_APPS) + [
-    app for app in TENANT_APPS if app not in SHARED_APPS
-]
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 MIDDLEWARE = [
     "django_tenants.middleware.TenantSubfolderMiddleware",
@@ -204,3 +203,6 @@ PERMISSION_CATEGORIES = {
         "expense",
     ],
 }
+
+CELERY_BROKER_URL = config("REDIS_URL", default="redis://localhost:6379/")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="django-db")

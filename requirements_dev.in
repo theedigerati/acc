@@ -2,6 +2,8 @@
 black
 ruff
 pytest
+celery[pytest]
+pytest-celery
 pytest-django
 mixer
 coverage

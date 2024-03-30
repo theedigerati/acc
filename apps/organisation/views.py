@@ -1,3 +1,5 @@
+from celery.result import AsyncResult
+from rest_framework.views import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,6 +10,7 @@ from .serializers import (
     OrganisationSerializer,
     OrganisationUsersUpdateSerializer,
 )
+from .tasks import setup_org_tenancy
 
 
 class AddRemoveUsers(DjangoModelPermissions):
@@ -29,6 +32,22 @@ class OrganisationViewSet(ModelViewSet):
             self.permission_classes = [BelongsToOrganisation, ViewAllOrganisations]
         return super().get_permissions()
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        task_id = self.perform_create(serializer)
+        print(task_id, type(task_id))
+        serializer_data = serializer.data
+        serializer_data.update({"task_id": str(task_id)})
+        headers = self.get_success_headers(serializer_data)
+        return Response(serializer_data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        task_id = setup_org_tenancy.delay(instance.id)
+        Organisation.objects.filter(id=instance.id).update(task_id=task_id)
+        return task_id
+
     @action(methods=["post"], detail=False)
     def add_users(self, request):
         response = self._update_users(request, "add")
@@ -38,6 +57,23 @@ class OrganisationViewSet(ModelViewSet):
     def remove_users(self, request):
         response = self._update_users(request, "remove")
         return Response(response)
+
+    @action(["get"], detail=True)
+    def task_status(self, request, pk=None):
+        """Get tenancy setup celery task status"""
+
+        instance = self.get_object()
+        if instance.task_id is None:
+            return Response("No tenancy task available", status=status.HTTP_400_BAD_REQUEST)
+        # task_result = AsyncResult(instance.task_id)
+        task_result = AsyncResult("random")
+        print(task_result.result)
+        result = {
+            "task_id": instance.task_id,
+            "task_status": task_result.status,
+            "task_result": task_result.result,
+        }
+        return Response(result)
 
     def _update_users(self, request, action_type):
         instance = request.tenant.organisation

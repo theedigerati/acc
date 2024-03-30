@@ -6,3 +6,5 @@ django-tenant-users
 djangorestframework
 djangorestframework_simplejwt
 django-filter
+celery[redis]
+django-celery-results
