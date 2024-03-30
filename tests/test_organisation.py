@@ -1,10 +1,12 @@
 import pytest
 from django.urls import reverse
+from tenant_users.tenants.models import get_public_schema_name
 from apps.organisation.models import Organisation
 from apps.user.models import User
 
 
 @pytest.mark.django_db
+# def test_list_create_organisation(client, celery_app, test_user, organisation_data):
 def test_list_create_organisation(client, test_user, organisation_data):
     url = reverse("organisation-list")
     # no permissions
@@ -13,15 +15,33 @@ def test_list_create_organisation(client, test_user, organisation_data):
     res = client.get(url)
     assert res.status_code == 403
     # create
-    test_user.add_permissions("add_organisation")
+    test_user.add_permissions("add_organisation", "view_organisation")
     res = client.post(url, data=organisation_data, format="json")
     assert res.status_code == 201
     assert res.data["address"]["line1"] == organisation_data["address"]["line1"]
     tenant = Organisation.objects.get(pk=res.data["id"]).tenant
+    assert tenant.schema_name == get_public_schema_name()  # tenant is intiallly public
+
+    # check tenancy setup task status
+    task_id = res.data["task_id"]
+    status_url = reverse("organisation-task-status", kwargs={"pk": res.data["id"]})
+    res = client.get(status_url)
+    assert res.status_code == 200
+    task_result = res.data
+    assert task_result["task_id"] == task_id
+    assert task_result["task_status"] == "PENDING"
+    assert task_result["task_result"] is None
+    while task_result["task_status"] == "PENDING":
+        print(task_result["task_status"], task_result["task_result"])
+        task_result = client.get(status_url).data
+    assert task_result["task_id"] == task_id
+    assert task_result["task_status"] == "SUCCESS"
+    assert task_result["task_result"]
+    tenant = Organisation.objects.get(pk=res.data["id"]).tenant
     assert tenant.name == organisation_data["name"]  # org tenant created
     assert tenant.user_set.filter(id=test_user.id).exists()  # request user added to org
+
     # list without permission
-    test_user.add_permissions("view_organisation")
     res = client.get(url)
     assert res.status_code == 403
     # list with permission
@@ -43,9 +63,7 @@ def test_retrieve_update_delete_organisation(
     res = client.delete(url)
     assert res.status_code == 403
 
-    test_user.add_permissions(
-        "view_organisation", "change_organisation", "delete_organisation"
-    )
+    test_user.add_permissions("view_organisation", "change_organisation", "delete_organisation")
     # retrieve
     res = client.get(url)
     assert res.status_code == 200
@@ -56,12 +74,8 @@ def test_retrieve_update_delete_organisation(
     assert res.data["name"] == organisation_data["name"]
     assert res.data["address"]["line1"] == organisation_data["address"]["line1"]
     org_object = Organisation.objects.select_related("tenant").get(pk=res.data["id"])
-    assert (
-        org_object.tenant.name == organisation_data["name"]
-    )  # tenant name should be updated
-    assert (
-        org_object.tenant.slug == org_object.get_tenant_slug()
-    )  # tenant slug should be updated
+    assert org_object.tenant.name == organisation_data["name"]  # tenant name should be updated
+    assert org_object.tenant.slug == org_object.get_tenant_slug()  # tenant slug should be updated
     # delete
     res = client.delete(url)
     assert res.status_code == 204

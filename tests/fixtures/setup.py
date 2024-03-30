@@ -1,5 +1,6 @@
 import pytest
 import contextlib
+import os
 from django.conf import settings
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -10,6 +11,7 @@ from tenant_users.tenants.tasks import provision_tenant
 from apps.user.models import User
 from apps.organisation.models import Tenant
 from mixer.backend.django import mixer
+from celery import Celery
 
 CLIENT_DOMAIN_NAME = "test.com"
 PUBLIC_EMAIL = settings.BASE_TENANT_OWNER_EMAIL
@@ -17,6 +19,14 @@ TEST_USER_EMAIL = "test@localhost"
 DEFAULT_PASSWORD = "password"
 TEST_TENANT_SLUG = "test"
 TENANT_SUBFOLDER_PREFIX = getattr(settings, "TENANT_SUBFOLDER_PREFIX", None)
+
+
+@pytest.fixture()
+def celery_app():
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+    app = Celery("tests")
+    app.config_from_object("django.conf:settings", namespace="CELERY")
+    app.autodiscover_tasks()
 
 
 @pytest.fixture()
@@ -64,9 +74,7 @@ def make_test_tenant():
 
     def _make_test_tenant(slug=TEST_TENANT_SLUG):
         with contextlib.suppress(ExistsError):
-            provision_tenant(
-                tenant_name=slug, tenant_slug=slug, user_email=PUBLIC_EMAIL
-            )
+            provision_tenant(tenant_name=slug, tenant_slug=slug, user_email=PUBLIC_EMAIL)
 
     return _make_test_tenant
 
