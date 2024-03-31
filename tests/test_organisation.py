@@ -5,9 +5,8 @@ from apps.organisation.models import Organisation
 from apps.user.models import User
 
 
-@pytest.mark.django_db
-# def test_list_create_organisation(client, celery_app, test_user, organisation_data):
-def test_list_create_organisation(client, test_user, organisation_data):
+@pytest.mark.django_db(transaction=True)
+def test_list_create_organisation(client, celery_app, celery_worker, test_user, organisation_data):
     url = reverse("organisation-list")
     # no permissions
     res = client.post(url, data=organisation_data, format="json")
@@ -19,7 +18,8 @@ def test_list_create_organisation(client, test_user, organisation_data):
     res = client.post(url, data=organisation_data, format="json")
     assert res.status_code == 201
     assert res.data["address"]["line1"] == organisation_data["address"]["line1"]
-    tenant = Organisation.objects.get(pk=res.data["id"]).tenant
+    org_id = res.data["id"]
+    tenant = Organisation.objects.get(pk=org_id).tenant
     assert tenant.schema_name == get_public_schema_name()  # tenant is intiallly public
 
     # check tenancy setup task status
@@ -32,13 +32,14 @@ def test_list_create_organisation(client, test_user, organisation_data):
     assert task_result["task_status"] == "PENDING"
     assert task_result["task_result"] is None
     while task_result["task_status"] == "PENDING":
-        print(task_result["task_status"], task_result["task_result"])
         task_result = client.get(status_url).data
     assert task_result["task_id"] == task_id
     assert task_result["task_status"] == "SUCCESS"
-    assert task_result["task_result"]
-    tenant = Organisation.objects.get(pk=res.data["id"]).tenant
-    assert tenant.name == organisation_data["name"]  # org tenant created
+    assert task_result["task_result"] is None
+
+    # org tenant should exist now
+    tenant = Organisation.objects.get(pk=org_id).tenant
+    assert tenant.name == organisation_data["name"]
     assert tenant.user_set.filter(id=test_user.id).exists()  # request user added to org
 
     # list without permission

@@ -35,16 +35,15 @@ class OrganisationViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        task_id = self.perform_create(serializer)
-        print(task_id, type(task_id))
+        task_id = self.perform_create(request, serializer)
         serializer_data = serializer.data
         serializer_data.update({"task_id": str(task_id)})
         headers = self.get_success_headers(serializer_data)
         return Response(serializer_data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def perform_create(self, serializer):
+    def perform_create(self, request, serializer):
         instance = serializer.save()
-        task_id = setup_org_tenancy.delay(instance.id)
+        task_id = setup_org_tenancy.delay(instance.id, request.user.id)
         Organisation.objects.filter(id=instance.id).update(task_id=task_id)
         return task_id
 
@@ -65,9 +64,7 @@ class OrganisationViewSet(ModelViewSet):
         instance = self.get_object()
         if instance.task_id is None:
             return Response("No tenancy task available", status=status.HTTP_400_BAD_REQUEST)
-        # task_result = AsyncResult(instance.task_id)
-        task_result = AsyncResult("random")
-        print(task_result.result)
+        task_result = AsyncResult(instance.task_id)
         result = {
             "task_id": instance.task_id,
             "task_status": task_result.status,

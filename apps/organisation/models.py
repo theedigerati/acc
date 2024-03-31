@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,6 +10,7 @@ from tenant_users.tenants.models import (
 )
 from django_tenants.models import DomainMixin
 from tenant_users.tenants.tasks import provision_tenant
+from apps.accounting.factory import AccountingFactory
 from apps.user.models import User
 from core.abstract_models import AbstractAddress
 
@@ -100,13 +102,14 @@ class Organisation(models.Model):
         return res
 
     def get_tenant_slug(self):
-        org_name = self.name.replace(" ", "-")
+        org_name = self.name.replace(" ", "-").lower()
         org_branch = self.branch.lower()
         return f"{org_name}-{org_branch}"
 
-    def _create_tenant(self):
+    def create_tenant(self, request_user_id=None):
+        # it is advised to run this on a celery task if called
+        # on a request because, migrations will be created.
         tenant_slug = self.get_tenant_slug()
-        # TODO: run this on a celery task
         provision_tenant(
             tenant_name=self.name,
             tenant_slug=tenant_slug,
@@ -114,6 +117,14 @@ class Organisation(models.Model):
             is_staff=True,
         )
         self.tenant = Tenant.objects.get(slug=tenant_slug)
+        if request_user_id:
+            user = get_user_model().objects.get(id=request_user_id)
+            self.tenant.add_user(user)
+        self.save()
+
+    def setup_default_accounts(self):
+        accounting_factory = AccountingFactory(self.tenant.schema_name)
+        accounting_factory.generate_default_accounts()
 
     def _update_tenant(self):
         tenant_slug = self.get_tenant_slug()
