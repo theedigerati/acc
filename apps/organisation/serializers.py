@@ -17,6 +17,7 @@ class OrganisationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organisation
         exclude = ("tenant",)
+        read_only_fields = ("task_id",)
 
     def create(self, validated_data):
         address_data = validated_data.pop("address", None)

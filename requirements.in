@@ -5,6 +5,7 @@ django-tenants
 django-tenant-users
 djangorestframework
 djangorestframework_simplejwt
+drf_spectacular
 django-filter
 celery[redis]
 django-celery-results

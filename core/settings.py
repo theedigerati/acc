@@ -33,6 +33,7 @@ SHARED_APPS = [
     "tenant_users.permissions",
     "tenant_users.tenants",
     "django_celery_results",
+    "drf_spectacular",
     # internal apps
     "apps.user",
     "apps.organisation",
@@ -181,11 +182,25 @@ REST_FRAMEWORK = {
         "core.permissions.BelongsToOrganisation",
         "core.permissions.BaseModelPermissions",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "COERCE_DECIMAL_TO_STRING": False,
+    "SEARCH_PARAM": "q",
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=2),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Accounting DRF API",
+    "DESCRIPTION": "Django Rest Framework Multi-tenant Accounting API",
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+    },
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX_INSERT": f"/{TENANT_SUBFOLDER_PREFIX}/default",
 }
 
 PERMISSION_CATEGORIES = {
