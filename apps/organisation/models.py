@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model
+import contextlib
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -82,7 +82,9 @@ class Organisation(models.Model):
         res = {"added": 0, "exist": 0}
         for user in users:
             try:
-                self.tenant.add_user(user, is_superuser=is_meta_users, is_staff=is_meta_users)
+                self.tenant.add_user(
+                    user, is_superuser=is_meta_users, is_staff=is_meta_users
+                )
                 user.assign_default_permissions()
                 res["added"] += 1
             except ExistsError:
@@ -118,8 +120,9 @@ class Organisation(models.Model):
         )
         self.tenant = Tenant.objects.get(slug=tenant_slug)
         if request_user_id:
-            user = get_user_model().objects.get(id=request_user_id)
-            self.tenant.add_user(user)
+            user = User.objects.get(id=request_user_id)
+            with contextlib.suppress(ExistsError):
+                self.tenant.add_user(user)
         self.save()
 
     def setup_default_accounts(self):
@@ -130,7 +133,9 @@ class Organisation(models.Model):
         tenant_slug = self.get_tenant_slug()
         if self.tenant.slug == tenant_slug:
             return
-        Tenant.objects.filter(id=self.tenant.id).update(name=self.name, slug=tenant_slug)
+        Tenant.objects.filter(id=self.tenant.id).update(
+            name=self.name, slug=tenant_slug
+        )
         if hasattr(settings, "TENANT_SUBFOLDER_PREFIX"):
             tenant_domain = tenant_slug
         else:

@@ -131,7 +131,7 @@ class UserViewSet(ModelViewSet):
     def can_retrieve_user(self, request, user):
         """
         Check if request user and `user` both belong
-        to the request tenant (for public tenant access).
+        to the request tenant.
         """
         tenants_for_user = user.tenants.exclude(schema_name="public")
         tenants_for_request_user = request.user.tenants.exclude(schema_name="public")
