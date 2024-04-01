@@ -39,9 +39,7 @@ class OrganisationViewSet(ModelViewSet):
         serializer_data = serializer.data
         serializer_data.update({"task_id": str(task_id)})
         headers = self.get_success_headers(serializer_data)
-        return Response(
-            serializer_data, status=status.HTTP_201_CREATED, headers=headers
-        )
+        return Response(serializer_data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, request, serializer):
         instance = serializer.save()
@@ -65,14 +63,11 @@ class OrganisationViewSet(ModelViewSet):
 
         instance = self.get_object()
         if instance.task_id is None:
-            return Response(
-                "No tenancy task available", status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response("No tenancy task available", status=status.HTTP_400_BAD_REQUEST)
         task_result = AsyncResult(instance.task_id)
         result = {
-            "task_id": instance.task_id,
-            "task_status": task_result.status,
-            "task_result": task_result.result,
+            "id": instance.task_id,
+            "status": task_result.status,
         }
         return Response(result)
 

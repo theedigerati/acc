@@ -28,14 +28,12 @@ def test_list_create_organisation(client, celery_app, celery_worker, test_user, 
     res = client.get(status_url)
     assert res.status_code == 200
     task_result = res.data
-    assert task_result["task_id"] == task_id
-    assert task_result["task_status"] == "PENDING"
-    assert task_result["task_result"] is None
-    while task_result["task_status"] == "PENDING":
+    assert task_result["id"] == task_id
+    assert task_result["status"] == "PENDING"
+    while task_result["status"] == "PENDING":
         task_result = client.get(status_url).data
-    assert task_result["task_id"] == task_id
-    assert task_result["task_status"] == "SUCCESS"
-    assert task_result["task_result"] is None
+    assert task_result["id"] == task_id
+    assert task_result["status"] == "SUCCESS"
 
     # org tenant should exist now
     tenant = Organisation.objects.get(pk=org_id).tenant
