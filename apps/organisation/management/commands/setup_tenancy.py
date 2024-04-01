@@ -5,6 +5,7 @@ from apps.organisation.models import OrgAddress, Organisation, Tenant
 from apps.user.models import User
 from tenant_users.tenants.utils import create_public_tenant
 from tenant_users.tenants.tasks import provision_tenant
+from apps.accounting.factory import AccountingFactory
 
 
 class Command(BaseCommand):
@@ -29,7 +30,7 @@ class Command(BaseCommand):
                 is_superuser=True,
                 first_name="Meta",
                 last_name="User",
-                role=User.Meta,
+                role=User.META,
                 password="password",
             )
             self.stdout.write(
@@ -64,5 +65,11 @@ class Command(BaseCommand):
                 tenant=tenant,
             )
             self.stdout.write(f"{org.name} has been created successfully")
+
+            self.stdout.write("Creating default Financial Accounts...")
+            accounting_factory = AccountingFactory(tenant.schema_name)
+            accounting_factory.generate_default_accounts()
+            self.stdout.write("Default accounts created successfully")
+
         else:
             self.stdout.write("Default organisation already exists!")
