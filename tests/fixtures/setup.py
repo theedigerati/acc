@@ -10,6 +10,7 @@ from tenant_users.tenants.tasks import provision_tenant
 from apps.user.models import User
 from apps.organisation.models import Tenant
 from mixer.backend.django import mixer
+from apps.accounting.factory import AccountingFactory
 
 CLIENT_DOMAIN_NAME = "test.com"
 PUBLIC_EMAIL = settings.BASE_TENANT_OWNER_EMAIL
@@ -55,6 +56,8 @@ def test_tenant(make_test_tenant):
     tenant = Tenant.objects.get(slug=TEST_TENANT_SLUG)
     if not hasattr(tenant, "organisation"):
         mixer.blend("organisation.Organisation", tenant=tenant)
+    acc_fact = AccountingFactory(tenant.schema_name)
+    acc_fact.generate_default_accounts()
     return tenant
 
 
@@ -64,7 +67,9 @@ def make_test_tenant():
 
     def _make_test_tenant(slug=TEST_TENANT_SLUG):
         with contextlib.suppress(ExistsError):
-            provision_tenant(tenant_name=slug, tenant_slug=slug, user_email=PUBLIC_EMAIL)
+            provision_tenant(
+                tenant_name=slug, tenant_slug=slug, user_email=PUBLIC_EMAIL
+            )
 
     return _make_test_tenant
 
