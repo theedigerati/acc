@@ -1,4 +1,4 @@
-## Accounting API
+## acc
 
 This is a simple accounting REST API. Manage invoices, bills, expenses, acccounting books & reports.
 
