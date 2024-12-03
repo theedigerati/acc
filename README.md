@@ -30,5 +30,9 @@ The application will now be avalaible at <http://localhost:8000> and Swagger API
 For  development, run
 
 ```
-docker comoser up --watch
+docker compose up --watch
 ```
+
+## Tenancy Setup
+
+After installation a default organisation(tenant) is created automatically and Chart of Accounts set up for it.
