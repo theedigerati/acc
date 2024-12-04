@@ -193,8 +193,8 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Accounting DRF API",
-    "DESCRIPTION": "Django Rest Framework Multi-tenant Accounting API",
+    "TITLE": "acc",
+    "DESCRIPTION": "Double-entry accounting REST API.",
     "SWAGGER_UI_SETTINGS": {
         "persistAuthorization": True,
     },
