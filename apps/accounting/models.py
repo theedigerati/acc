@@ -24,7 +24,7 @@ class AccountType(models.TextChoices):
         "Equity",
     )
     INCOME = (
-        "inocome",
+        "income",
         "Income",
     )
     EXPENSE = "expense", "Expense"
@@ -65,6 +65,7 @@ class Account(models.Model):
         on_delete=models.CASCADE,
         related_name="sub_accounts",
     )
+    order = models.IntegerField(default=0)
     is_archived = models.BooleanField(default=False)
     editable = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -74,7 +75,7 @@ class Account(models.Model):
     actives = ActiveAccountManager()
 
     class Meta:
-        ordering = ["code", "created_at"]
+        ordering = ["order", "created_at"]
 
     def __str__(self) -> str:
         return self.name

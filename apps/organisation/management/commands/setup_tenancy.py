@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import transaction
 from django.core.management.base import BaseCommand
+from apps.accounting.models import Account
 from apps.organisation.models import OrgAddress, Organisation, Tenant
 from apps.user.models import User
 from tenant_users.tenants.utils import create_public_tenant
@@ -17,6 +18,7 @@ class Command(BaseCommand):
 
         self.create_public_tenant(domain, public_owner)
         self.setup_default_organisation(public_owner)
+        self.setup_default_resources()
         self.stdout.write("Tenancy setup done!")
 
     @transaction.atomic
@@ -73,3 +75,12 @@ class Command(BaseCommand):
 
         else:
             self.stdout.write("Default organisation already exists!")
+
+    @transaction.atomic()
+    def setup_default_resources(self):
+        self.stdout.write("Setting up  default resources...")
+        for org in Organisation.objects.all():
+            if Account.objects.first() is None:
+                self.stdout.write(f"Creating default Financial Accounts for {org.name}...")
+                accounting_factory = AccountingFactory(org.tenant.schema_name)
+                accounting_factory.generate_default_accounts()
