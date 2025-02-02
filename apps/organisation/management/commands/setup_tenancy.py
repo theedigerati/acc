@@ -80,7 +80,6 @@ class Command(BaseCommand):
     def setup_default_resources(self):
         self.stdout.write("Setting up  default resources...")
         for org in Organisation.objects.all():
-            if Account.objects.first() is None:
-                self.stdout.write(f"Creating default Financial Accounts for {org.name}...")
-                accounting_factory = AccountingFactory(org.tenant.schema_name)
-                accounting_factory.generate_default_accounts()
+            self.stdout.write(f"Creating default Financial Accounts for {org.name}...")
+            accounting_factory = AccountingFactory(org.tenant.schema_name)
+            accounting_factory.generate_default_accounts()
