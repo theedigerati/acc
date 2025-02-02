@@ -9,7 +9,6 @@ from tenant_users.tenants.models import (
     get_public_schema_name,
 )
 from django_tenants.models import DomainMixin
-from tenant_users.tenants.tasks import provision_tenant
 from apps.accounting.factory import AccountingFactory
 from apps.user.models import User
 from core.abstract_models import AbstractAddress
@@ -109,8 +108,9 @@ class Organisation(models.Model):
         return f"{org_name}-{org_branch}"
 
     def create_tenant(self, request_user_id=None):
-        # it is advised to run this on a celery task if called
-        # on a request because, migrations will be created.
+        # on a request cycle, this method should be ran async
+        # e.g using celery, coz `provision_tenant` will run migrations
+        from tenant_users.tenants.tasks import provision_tenant
         tenant_slug = self.get_tenant_slug()
         provision_tenant(
             tenant_name=self.name,
