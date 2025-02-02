@@ -13,11 +13,11 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD:?}
       - POSTGRES_NAME=${DB_NAME:?}
 
-  drf:
+  api:
     networks:
       - internal
     build: .
-    command: ./init.sh
+    # command: ./init.sh
     ports:
       - "8000:8000"
     develop:
@@ -43,7 +43,7 @@ services:
       - CELERY_BROKER=${REDIS_URL:?}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:?}
     depends_on:
-      - drf
+      - api
       - redis
 
   redis:

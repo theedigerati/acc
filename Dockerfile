@@ -1,10 +1,30 @@
-FROM python:3.10-alpine
+ARG PYTHON_VERSION=3.12-slim-bullseye
+
+FROM python:${PYTHON_VERSION}
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install psycopg2 dependencies.
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /code
+
 WORKDIR /code
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-COPY . /code/
-# COPY build.sh /code/build.sh
-# RUN chmod +x /code/build.sh && /code/build.sh
-RUN pip install -r requirements.txt
+
+RUN pip install poetry
+COPY pyproject.toml poetry.lock /code/
+RUN poetry config virtualenvs.create false
+RUN poetry install --only main --no-root --no-interaction
+COPY . /code
+
 RUN chmod +x /code/init.sh
-# CMD ["/bin/sh", "./build.sh"]
+# RUN python manage.py collectstatic --noinput
+
+EXPOSE 8000
+
+CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "core.wsgi"]
+
